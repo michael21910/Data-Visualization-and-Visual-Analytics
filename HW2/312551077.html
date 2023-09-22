@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="./312551077.css">
+    <title>312551077 parallel coordinate plot - iris dataset</title>
+</head>
+<body>
+    <h1 class="title">312551077 parallel coordinate plot - iris dataset</h1>
+
+    <!-- select attributes of iris -->
+    <div class="selection-container">
+        <label for="attr1">Select for attribute1: </label>
+        <select id="attr1"></select>
+        <div class="spacing"></div>
+        <label for="attr2">Select for attribute2: </label>
+        <select id="attr2"></select>
+        <div class="spacing"></div>
+        <label for="attr3">Select for attribute3: </label>
+        <select id="attr3"></select>
+        <div class="spacing"></div>
+        <label for="attr4">Select for attribute4: </label>
+        <select id="attr4"></select>
+    </div>
+
+    <div id="message"></div>
+
+    <div class="color-introduction">
+        <div>
+            <span style="color: red;">&#8211;</span> Iris-setosa
+        </div>
+        <div>
+            <span style="color: green;">&#8211;</span> Iris-versicolor
+        </div>
+        <div>
+            <span style="color: blue;">&#8211;</span> Iris-virginica
+        </div>
+    </div>
+    
+    <div id="iris-parallel-coordinates"></div>
+
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="./312551077.js"></script>
+</body>
+</html>

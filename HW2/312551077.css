@@ -1,0 +1,61 @@
+* {
+    margin: 0;
+    padding: 0;
+    font-family: "Lucida Console", monospace;
+    background-color: #f5f5f5;
+}
+
+.body {
+    display: flex;
+    flex-direction: column;
+}
+
+.title {
+    text-align: center;
+    margin: 5vh 0;
+}
+
+.selection-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.spacing {
+    width: 2vw;
+}
+
+#iris-parallel-coordinates {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+#message {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin: 3vh 0;
+    color: red  ;
+    text-align: center;
+}
+
+.color-introduction {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin: 3vh 0;
+    color: #363636;
+}
+
+.color-introduction div {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin: 0 1vw;
+}
