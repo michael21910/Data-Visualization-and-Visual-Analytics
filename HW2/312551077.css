@@ -22,6 +22,10 @@
     justify-content: center;
 }
 
+.selection-container > label {
+    text-align: center;
+}
+
 .spacing {
     width: 2vw;
 }
