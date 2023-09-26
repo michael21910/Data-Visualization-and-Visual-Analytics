@@ -1,22 +1,23 @@
+import { DataObj } from "./312551077_DataObj.js";
+
 const dataPath = "./abalone.data";
 let dataArray = [];
-let maleData = [];
-let femaleData = [];
-let infantData = [];
 
 fetch(dataPath)
     .then(response => response.text())
     .then(contents => {
         dataArray = contents.split("\n");
-        maleData = dataArray.filter(data => data.split(",")[0] === "M");
-        femaleData = dataArray.filter(data => data.split(",")[0] === "F");
-        infantData = dataArray.filter(data => data.split(",")[0] === "I");
-        console.log(maleData);
-        console.log(femaleData);
-        console.log(infantData);
-        console.log("maleData length: ", maleData.length);
-        console.log("femaleData length: ", femaleData.length);
-        console.log("infantData length: ", infantData.length);
+        dataArray = dataArray.map(row => row.split(","));
+        dataArray = dataArray.map(row => row.map((value, index) => index === 0 ? value : parseFloat(value)));
+        const maleData = new DataObj(dataArray.filter(data => data[0] === "M"));
+        const femaleData = new DataObj(dataArray.filter(data => data[0] === "F"));
+        const infantData = new DataObj(dataArray.filter(data => data[0] === "I"));
+
+        
+        console.log("Correlation Matrix:");
+        console.log(maleData.CalcCorrelationMatrix());
+        console.log(femaleData.CalcCorrelationMatrix());
+        console.log(infantData.CalcCorrelationMatrix());
     })
     .catch(error => {
         console.error('Error reading the file:', error);
