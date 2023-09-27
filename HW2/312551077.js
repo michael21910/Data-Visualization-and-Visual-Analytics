@@ -150,7 +150,7 @@ d3.csv("http://vis.lab.djosix.com:2023/data/iris.csv").then(function(data) {
     });
     
     attr4.on("change", () => {
-        handleDropdownChange(attr4, selectedAttributes);
+        handleDropdownChange(attr4);
         updatePCP();
     });
     updatePCP();

@@ -1,6 +1,6 @@
 import { DataObj } from "./312551077_DataObj.js";
 
-const dataPath = "./abalone.data";
+const dataPath = "http://vis.lab.djosix.com:2023/data/abalone.data";
 let dataArray = [];
 
 fetch(dataPath)
