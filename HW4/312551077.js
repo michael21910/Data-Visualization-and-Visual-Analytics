@@ -16,9 +16,6 @@ d3.csv('http://vis.lab.djosix.com:2023/data/iris.csv').then((data) => {
         d['petal length'] = +d['petal length'];
         d['petal width'] = +d['petal width'];
     });
-    // initialize attributes
-    let currentX = 'sepal length';
-    let currentY = 'sepal width';
     // create svg
     const svgContainer = d3.select('.svg-container');
     const svg = svgContainer
@@ -27,6 +24,16 @@ d3.csv('http://vis.lab.djosix.com:2023/data/iris.csv').then((data) => {
         .attr('height', height + margin.top + margin.bottom)
         .append('g')
         .attr('transform', `translate(${margin.left * 2},${margin.top})`);
+    // create brush
+    const brush = d3.brush()
+        .extent([[0, 0], [subplotSize, subplotSize]])
+        .on('end', brushed);
+    function brushed() {
+        if (d3.event.selection) {
+            const [[x0, y0], [x1, y1]] = d3.event.selection;
+            console.log(x0, y0, x1, y1);
+        }
+    }
     // attributes for x and y axis
     const attributes = ['sepal length', 'sepal width', 'petal length', 'petal width'];
     for (let i = 0; i < attributes.length; i++) {
@@ -94,6 +101,10 @@ d3.csv('http://vis.lab.djosix.com:2023/data/iris.csv').then((data) => {
                 yExtent[1] += innerPadding;
                 const x = d3.scaleLinear().domain(xExtent).range([0, subplotSize]);
                 const y = d3.scaleLinear().domain(yExtent).range([subplotSize, 0]);
+                // draw brush
+                subplotGroup.append('g')
+                    .attr('class', 'brush')
+                    .call(brush);
                 // scatter plot
                 subplotGroup
                     .selectAll('.dot')
