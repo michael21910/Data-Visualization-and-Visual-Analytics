@@ -4,6 +4,7 @@ const width = 1000 - margin.left - margin.right;
 const height = 1000 - margin.top - margin.bottom;
 const subplotSize = 220;
 const padding = 20;
+const innerPadding = 0.15;
 
 // load iris dataset
 d3.csv('http://vis.lab.djosix.com:2023/data/iris.csv').then((data) => {
@@ -22,16 +23,65 @@ d3.csv('http://vis.lab.djosix.com:2023/data/iris.csv').then((data) => {
         .append('svg')
         .attr('width', width + margin.left + margin.right)
         .attr('height', height + margin.top + margin.bottom)
+        .on('mousedown', () => {
+            d3.selectAll('.subplot')
+                .selectAll('.dot')
+                .attr('fill', (d) => {
+                    if (d.class === "Iris-setosa") return 'red';
+                    else if (d.class === "Iris-versicolor") return 'green';
+                    else return 'blue';
+                });
+            d3.selectAll('.brush').call(brush.move, null);
+        })
         .append('g')
         .attr('transform', `translate(${margin.left * 2},${margin.top})`);
     // create brush
     const brush = d3.brush()
         .extent([[0, 0], [subplotSize, subplotSize]])
-        .on('end', brushed);
+        .on('start brush end', brushed);
+    let activeBrush = false;
     function brushed() {
         if (d3.event.selection) {
+            const currentBrush = d3.select(this.parentNode).select('.brush');
+            if (activeBrush !== false && activeBrush.node() !== currentBrush.node()) {
+                activeBrush.call(brush.move, null);
+            }
+            activeBrush = currentBrush;
+            const xValue = d3.select(this.parentNode).attr('xValue');
+            const yValue = d3.select(this.parentNode).attr('yValue');
             const [[x0, y0], [x1, y1]] = d3.event.selection;
-            console.log(x0, y0, x1, y1);
+            const xExtent = [Math.floor(d3.min(data, (d) => d[xValue])) - innerPadding, Math.ceil(d3.max(data, (d) => d[xValue])) + innerPadding];
+            const yExtent = d3.extent(data, (d) => d[yValue]);
+            yExtent[0] -= innerPadding;
+            yExtent[1] += innerPadding;
+            let x0Original = d3.scaleLinear().domain([0, subplotSize]).range([xExtent[0], xExtent[1]])(x0);
+            let x1Original = d3.scaleLinear().domain([0, subplotSize]).range([xExtent[0], xExtent[1]])(x1);
+            let y0Original = d3.scaleLinear().domain([subplotSize, 0]).range([yExtent[0], yExtent[1]])(y0);
+            let y1Original = d3.scaleLinear().domain([subplotSize, 0]).range([yExtent[0], yExtent[1]])(y1);
+            if (x0Original > x1Original) {
+                let temp = x0Original;
+                x0Original = x1Original;
+                x1Original = temp;
+            }
+            if (y0Original > y1Original) {
+                let temp = y0Original;
+                y0Original = y1Original;
+                y1Original = temp;
+            }
+            const selectedData = data.filter((d) => {
+                return x0Original <= d[xValue] && d[xValue] <= x1Original && y0Original <= d[yValue] && d[yValue] <= y1Original;
+            });
+            d3.selectAll('.subplot')
+                .selectAll('.dot')
+                .attr('fill', (d) => {
+                    if (selectedData.includes(d)) {
+                        if (d.class === "Iris-setosa") return 'red';
+                        else if (d.class === "Iris-versicolor") return 'green';
+                        else return 'blue';
+                    } else {
+                        return 'gray';
+                    }
+                });
         }
     }
     // attributes for x and y axis
@@ -43,9 +93,10 @@ d3.csv('http://vis.lab.djosix.com:2023/data/iris.csv').then((data) => {
             const subplotGroup = svg
                 .append('g')
                 .attr('class', 'subplot')
+                .attr('xValue', xValue)
+                .attr('yValue', yValue)
                 .attr('transform', `translate(${j * (subplotSize + padding)}, ${i * (subplotSize + padding)})`);
             // draw scatter plot and histogram
-            const innerPadding = 0.15;
             const xExtent = [Math.floor(d3.min(data, (d) => d[xValue])) - innerPadding, Math.ceil(d3.max(data, (d) => d[xValue])) + innerPadding];
             if (xValue === yValue) {
                 // histogram
