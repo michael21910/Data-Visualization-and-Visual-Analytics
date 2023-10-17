@@ -1,0 +1,46 @@
+* {
+    margin: 0;
+    padding: 0;
+    font-family: "Lucida Console", monospace;
+    background-color: #f5f5f5;
+}
+
+.body {
+    display: flex;
+    flex-direction: column;
+}
+
+#message {
+    color: red;
+    font-size: 16px;
+    text-align: center;
+    margin-bottom: 5vh;
+}
+
+.title {
+    text-align: center;
+    margin: 5vh 0;
+}
+
+.data-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    width: 90%;
+}
+/*
+#y-axis {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-start;
+    font-size: 12px;
+}
+*/
+.svg-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
