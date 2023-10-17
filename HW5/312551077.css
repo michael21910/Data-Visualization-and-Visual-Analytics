@@ -22,6 +22,36 @@
     margin: 5vh 0;
 }
 
+.label-introduction {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: center;
+    margin-bottom: 24px;
+    width: 100%;
+}
+
+.label-introduction div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.label-introduction button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 8px 16px;
+}
+
+.label-introduction button:hover {
+    border: 1px solid black;
+    border-radius: 16px;
+    transition: 0.5s;
+}
+
 .data-container {
     display: flex;
     flex-direction: row;
@@ -29,15 +59,11 @@
     align-items: center;
     width: 90%;
 }
-/*
-#y-axis {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    align-items: flex-start;
-    font-size: 12px;
+
+.x-axis text{
+    transform: rotate(-15deg) translate(0, 5px);
 }
-*/
+
 .svg-container {
     display: flex;
     flex-direction: column;

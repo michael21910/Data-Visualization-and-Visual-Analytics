@@ -1,22 +1,102 @@
 // http://vis.lab.djosix.com:2023/data/TIMES_WorldUniversityRankings_2024.csv
-
-// load iris dataset
 d3.csv('http://vis.lab.djosix.com:2023/data/TIMES_WorldUniversityRankings_2024.csv').then((data) => {
     data = data.map((d) => {
         return {
-            citations: +d['scores_citations'],
-            industryIncome: +d['scores_industry_income'],
-            international: +d['scores_international_outlook'],
-            research: +d['scores_research'],
-            teaching: +d['scores_teaching'],
-            scoreOverall: +d['scores_overall'],
-            total: (+d['scores_citations']) + (+d['scores_industry_income']) + (+d['scores_international_outlook']) + (+d['scores_research']) + (+d['scores_teaching']),
+            citations: d['scores_citations'] === 'n/a' ? 0 : +d['scores_citations'],
+            industryIncome: d['scores_industry_income'] === 'n/a' ? 0 : +d['scores_industry_income'],
+            international: d['scores_international_outlook'] === 'n/a' ? 0 : +d['scores_international_outlook'],
+            research: d['scores_research'] === 'n/a' ? 0 : +d['scores_research'],
+            teaching: d['scores_teaching'] === 'n/a' ? 0 : +d['scores_teaching'],
+            scoreOverall: d['scores_overall'] === 'n/a' ? 0 : +d['scores_overall'],
             name: d['name']
         };
     });
-    const colorDomain = ['citations', 'industryIncome', 'international', 'research', 'teaching']
-    
-    // sort according to user's choice
+
+    const labelButtons = document.querySelectorAll('.label');
+    function SortData(data, key, order) {
+        const keysMap = {
+            'Citations': 'citations',
+            'Industry Income': 'industryIncome',
+            'International': 'international',
+            'Research': 'research',
+            'Teaching': 'teaching',
+        }
+        key = keysMap[key];
+        const dataWithBars = data.filter(d => d.citations + d.industryIncome + d.international + d.research + d.teaching > 0);
+        const dataWithoutBars = data.filter(d => d.citations + d.industryIncome + d.international + d.research + d.teaching === 0);
+        const sortedData = dataWithBars.sort((a, b) => {
+            if (order === 'ascending') {
+                return a[key] - b[key];
+            } else {
+                return b[key] - a[key];
+            }
+        });
+        return sortedData.concat(dataWithoutBars);
+    }
+
+    labelButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            const key = button.textContent.split('(')[0].trim();
+            const order = button.textContent.endsWith('ascending)') ? 'ascending' : 'descending';
+            const sortedData = SortData(data, key, order);
+            UpdateStackedBarChart(sortedData);
+        })
+    });
+
+    function UpdateStackedBarChart(sortedData) {
+        const yScale = d3.scaleBand()
+            .domain(sortedData.map(d => d.name))
+            .range([0, height])
+            .padding(0.1);
+        const updatedStackedData = stack(sortedData);
+        xScale.domain([0, d3.max(sortedData, d => d.citations + d.industryIncome + d.international + d.research + d.teaching)]);
+        const universityGroups = svg.selectAll('.university-group')
+            .data(sortedData, d => d.name);
+        universityGroups.exit().remove();
+        universityGroups.transition()
+            .duration(500)
+            .attr('transform', d => `translate(0, ${yScale(d.name)})`);
+        const newGroups = universityGroups.enter()
+            .append('g')
+            .attr('class', 'university-group')
+            .attr('transform', d => `translate(0, ${yScale(d.name)})`);
+        newGroups.selectAll('rect')
+            .data(d => updatedStackedData(keys)([d]))
+            .enter()
+            .selectAll('rect')
+            .data(d => d)
+            .enter()
+            .append('rect')
+            .attr('x', d => xScale(d[0]))
+            .attr('y', 0)
+            .attr('width', d => xScale(d[1]) - xScale(d[0]))
+            .attr('height', yScale.bandwidth())
+            .attr('fill', (d) => color(d.attribute));
+        svg.select('.x-axis')
+            .transition()
+            .duration(500)
+            .call(d3.axisBottom(xScale));
+
+        yAxisData.innerHTML = '';
+        yAxisData.style.height = height + margin.top + margin.bottom + 'px';
+        for (let i = 0; i < sortedData.length; i++) {
+            let addingTag = document.createElement('div');
+            addingTag.innerHTML = sortedData[i].name;
+            addingTag.style.textAlign = 'right';
+            addingTag.style.height = '30px';
+            addingTag.style.display = 'flex';
+            addingTag.style.alignItems = 'center';
+            yAxisData.appendChild(addingTag);
+        }
+    }
+
+    // 使用 d3.stack 來處理資料
+    const stack = d3.stack()
+        .keys(['citations', 'industryIncome', 'international', 'research', 'teaching'])
+        .order(d3.stackOrderNone)
+        .offset(d3.stackOffsetNone);
+
+    const stackedData = stack(data);
 
     // const for svg
     const margin = { top: 20, right: 20, bottom: 20, left: 20 };
@@ -26,12 +106,14 @@ d3.csv('http://vis.lab.djosix.com:2023/data/TIMES_WorldUniversityRankings_2024.c
     // add element for y axis
     var yAxisData = document.getElementById('y-axis');
     yAxisData.style.width = 'auto';
-    yAxisData.style.height = height + 'px';
+    yAxisData.style.height = height + margin.top + margin.bottom + 'px';
     for (let i = 0; i < data.length; i++) {
         let addingTag = document.createElement('div');
         addingTag.innerHTML = data[i].name;
         addingTag.style.textAlign = 'right';
         addingTag.style.height = '30px';
+        addingTag.style.display = 'flex';
+        addingTag.style.alignItems = 'center';
         yAxisData.appendChild(addingTag);
     }
     yAxisData.style.display = 'flex';
@@ -39,19 +121,20 @@ d3.csv('http://vis.lab.djosix.com:2023/data/TIMES_WorldUniversityRankings_2024.c
     yAxisData.style.justifyContent = 'start';
     yAxisData.style.alignItems = 'flex-end';
     yAxisData.style.fontSize = '12px';
-
-    const xScale = d3.scaleLinear()
-        .domain([0, d3.max(data, d => d.total)])
-        .range([0, width]);
+    yAxisData.style.marginRight = '10px';
 
     const yScale = d3.scaleBand()
         .domain(data.map(d => d.name))
         .range([0, height])
         .padding(0.1);
 
+    const xScale = d3.scaleLinear()
+        .domain([0, d3.max(data, d => d.citations + d.industryIncome + d.international + d.research + d.teaching)])
+        .range([0, width]);
+
     const color = d3.scaleOrdinal()
-        .domain(colorDomain)
-        .range(['red', 'blue', 'green', 'yellow', 'purple']);
+        .domain(['citations', 'industryIncome', 'international', 'research', 'teaching'])
+        .range(['#AB8C83', '#8592A2', '#737C75', '#C5AB89', '#72626C']);
 
     const svgContainer = d3.select('.svg-container');
     const svg = svgContainer
@@ -59,20 +142,39 @@ d3.csv('http://vis.lab.djosix.com:2023/data/TIMES_WorldUniversityRankings_2024.c
         .attr('width', width + margin.left + margin.right)
         .attr('height', height + margin.top + margin.bottom);
 
-    svg.append("g")
-        .selectAll("g")
+    // Create a group for each university and draw a stacked bar
+    const universityGroups = svg.selectAll('.university-group')
         .data(data)
         .enter()
-        .append("g")
-        .selectAll("rect")
-        .data(d => colorDomain.map(key => ({ key, value: d[key] })))
+        .append('g')
+        .attr('class', 'university-group')
+        .attr('transform', d => `translate(0, ${yScale(d.name)})`);
+
+    // Create five rectangles(stacked bar) for each group
+    universityGroups.selectAll('rect')
+        .data(d => {
+            const stackedData = stack.keys(['citations', 'industryIncome', 'international', 'research', 'teaching'])([d]);
+            stackedData.forEach((group) => {
+                group.forEach((d) => {
+                    d.attribute = group.key;
+                });
+            });
+            return stackedData;
+        })
         .enter()
-        .append("rect")
-        .attr("x", d => xScale(0))
-        .attr("y", d => yScale(d.name))
-        .attr("width", d => xScale(d.value))
-        .attr("height", yScale.bandwidth())
-        .attr("fill", d => color(d.key));
-    // debug
-    console.log(data);
+        .selectAll('rect')
+        .data(d => d)
+        .enter()
+        .append('rect')
+        .attr('x', d => xScale(d[0]))
+        .attr('y', 0)
+        .attr('width', d => xScale(d[1]) - xScale(d[0]))
+        .attr('height', yScale.bandwidth())
+        .attr('fill', (d) => color(d.attribute));
+
+    // Add X-axis
+    svg.append('g')
+        .attr('class', 'x-axis')
+        .attr('transform', `translate(0, 0)`)
+        .call(d3.axisBottom(xScale));
 });
