@@ -70,3 +70,13 @@
     justify-content: center;
     align-items: center;
 }
+
+#tooltip {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px;
+    border-radius: 3px;
+    display: none;
+    pointer-events: none;
+}

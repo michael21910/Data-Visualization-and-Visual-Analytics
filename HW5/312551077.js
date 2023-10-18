@@ -1,5 +1,6 @@
 // http://vis.lab.djosix.com:2023/data/TIMES_WorldUniversityRankings_2024.csv
 d3.csv('http://vis.lab.djosix.com:2023/data/TIMES_WorldUniversityRankings_2024.csv').then((data) => {
+    // data preprocessing
     data = data.map((d) => {
         return {
             citations: d['scores_citations'] === 'n/a' ? 0 : +d['scores_citations'],
@@ -11,9 +12,13 @@ d3.csv('http://vis.lab.djosix.com:2023/data/TIMES_WorldUniversityRankings_2024.c
             name: d['name']
         };
     });
+    // tooptip for displaying the score
+    const tooltip = d3.select('#tooltip');
 
+    // if the user clicked the button, sort the data according to the button and update the chart
     const labelButtons = document.querySelectorAll('.label');
     function SortData(data, key, order) {
+        // button text content to key
         const keysMap = {
             'Citations': 'citations',
             'Industry Income': 'industryIncome',
@@ -27,13 +32,15 @@ d3.csv('http://vis.lab.djosix.com:2023/data/TIMES_WorldUniversityRankings_2024.c
         const sortedData = dataWithBars.sort((a, b) => {
             if (order === 'ascending') {
                 return a[key] - b[key];
-            } else {
+            }
+            else {
                 return b[key] - a[key];
             }
         });
         return sortedData.concat(dataWithoutBars);
     }
 
+    // event listener for each button
     labelButtons.forEach((button) => {
         button.addEventListener('click', () => {
             const key = button.textContent.split('(')[0].trim();
@@ -43,10 +50,11 @@ d3.csv('http://vis.lab.djosix.com:2023/data/TIMES_WorldUniversityRankings_2024.c
         })
     });
 
+    // update the chart
     function UpdateStackedBarChart(sortedData) {
         const yScale = d3.scaleBand()
             .domain(sortedData.map(d => d.name))
-            .range([0, height])
+            .range([0, height + margin.top + margin.bottom])
             .padding(0.1);
         const updatedStackedData = stack(sortedData);
         xScale.domain([0, d3.max(sortedData, d => d.citations + d.industryIncome + d.international + d.research + d.teaching)]);
@@ -90,7 +98,7 @@ d3.csv('http://vis.lab.djosix.com:2023/data/TIMES_WorldUniversityRankings_2024.c
         }
     }
 
-    // 使用 d3.stack 來處理資料
+    // stack the data
     const stack = d3.stack()
         .keys(['citations', 'industryIncome', 'international', 'research', 'teaching'])
         .order(d3.stackOrderNone)
@@ -125,7 +133,7 @@ d3.csv('http://vis.lab.djosix.com:2023/data/TIMES_WorldUniversityRankings_2024.c
 
     const yScale = d3.scaleBand()
         .domain(data.map(d => d.name))
-        .range([0, height])
+        .range([0, height + margin.top + margin.bottom])
         .padding(0.1);
 
     const xScale = d3.scaleLinear()
@@ -170,7 +178,18 @@ d3.csv('http://vis.lab.djosix.com:2023/data/TIMES_WorldUniversityRankings_2024.c
         .attr('y', 0)
         .attr('width', d => xScale(d[1]) - xScale(d[0]))
         .attr('height', yScale.bandwidth())
-        .attr('fill', (d) => color(d.attribute));
+        .attr('fill', (d) => color(d.attribute))
+        .on('mouseover', (d) => {
+            const attribute = d.attribute;
+            const value = data.find(item => item.name === d.data.name)[attribute];;
+            tooltip.style('left', d3.event.pageX + 'px');
+            tooltip.style('top', d3.event.pageY + 'px');
+            tooltip.html(`${attribute}: ${value}`);
+            tooltip.style('display', 'block');
+        })
+        .on('mouseout', () => {
+            tooltip.style('display', 'none');
+        });
 
     // Add X-axis
     svg.append('g')
