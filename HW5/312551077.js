@@ -8,10 +8,11 @@ d3.csv('http://vis.lab.djosix.com:2023/data/TIMES_WorldUniversityRankings_2024.c
             international: d['scores_international_outlook'] === 'n/a' ? 0 : +d['scores_international_outlook'],
             research: d['scores_research'] === 'n/a' ? 0 : +d['scores_research'],
             teaching: d['scores_teaching'] === 'n/a' ? 0 : +d['scores_teaching'],
-            scoreOverall: d['scores_overall'] === 'n/a' ? 0 : +d['scores_overall'],
+            scoreOverall: d['scores_overall'],
             name: d['name']
         };
     });
+
     // tooptip for displaying the score
     const tooltip = d3.select('#tooltip');
 
@@ -25,19 +26,34 @@ d3.csv('http://vis.lab.djosix.com:2023/data/TIMES_WorldUniversityRankings_2024.c
             'International': 'international',
             'Research': 'research',
             'Teaching': 'teaching',
+            'Overall': 'scoreOverall'
         }
         key = keysMap[key];
-        const dataWithBars = data.filter(d => d.citations + d.industryIncome + d.international + d.research + d.teaching > 0);
-        const dataWithoutBars = data.filter(d => d.citations + d.industryIncome + d.international + d.research + d.teaching === 0);
-        const sortedData = dataWithBars.sort((a, b) => {
+        var dataWithBars;
+        var dataWithoutBars;
+        if (key !== 'scoreOverall') {
+            dataWithBars = data.filter(d => d.citations + d.industryIncome + d.international + d.research + d.teaching > 0);
+            dataWithoutBars = data.filter(d => d.citations + d.industryIncome + d.international + d.research + d.teaching === 0);
+            const sortedData = dataWithBars.sort((a, b) => {
+                if (order === 'ascending') {
+                    return a[key] - b[key];
+                }
+                else {
+                    return b[key] - a[key];
+                }
+            });
+            return sortedData.concat(dataWithoutBars);
+        }
+        else {
+            // reverse the order of the data
+            const sortedData = JSON.parse(JSON.stringify(data));
+            dataWithBars = sortedData.filter(d => d.scoreOverall !== 'n/a');
+            dataWithoutBars = sortedData.filter(d => d.scoreOverall === 'n/a');
             if (order === 'ascending') {
-                return a[key] - b[key];
+                dataWithBars.reverse();
             }
-            else {
-                return b[key] - a[key];
-            }
-        });
-        return sortedData.concat(dataWithoutBars);
+            return dataWithBars.concat(dataWithoutBars);
+        }
     }
 
     // event listener for each button
@@ -85,11 +101,14 @@ d3.csv('http://vis.lab.djosix.com:2023/data/TIMES_WorldUniversityRankings_2024.c
             .duration(500)
             .call(d3.axisBottom(xScale));
 
+        // add element for y axis
+        var yAxisData = document.getElementById('y-axis');
+        yAxisData.style.width = 'auto';
         yAxisData.innerHTML = '';
         yAxisData.style.height = height + margin.top + margin.bottom + 'px';
         for (let i = 0; i < sortedData.length; i++) {
             let addingTag = document.createElement('div');
-            addingTag.innerHTML = sortedData[i].name;
+            addingTag.innerHTML = sortedData[i].name + '(Overall score: ' + sortedData[i].scoreOverall + ')';
             addingTag.style.textAlign = 'right';
             addingTag.style.height = '30px';
             addingTag.style.display = 'flex';
@@ -117,7 +136,7 @@ d3.csv('http://vis.lab.djosix.com:2023/data/TIMES_WorldUniversityRankings_2024.c
     yAxisData.style.height = height + margin.top + margin.bottom + 'px';
     for (let i = 0; i < data.length; i++) {
         let addingTag = document.createElement('div');
-        addingTag.innerHTML = data[i].name;
+        addingTag.innerHTML = data[i].name + '(Overall score: ' + data[i].scoreOverall + ')';
         addingTag.style.textAlign = 'right';
         addingTag.style.height = '30px';
         addingTag.style.display = 'flex';
