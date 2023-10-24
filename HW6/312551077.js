@@ -5,6 +5,9 @@ const margin = { top: 20, right: 20, bottom: 40, left: 80 };
 const width = 1200 - margin.left - margin.right
 const height = 600 - margin.top - margin.bottom;
 
+// tooltip
+const tooltip = d3.select('#tooltip');
+
 // create svg
 const svg = d3.select('#themeriver')
     .append('svg')
@@ -58,9 +61,9 @@ function DrawCharts(keys, originalData) {
     // clear all svg
     svg.selectAll('*').remove();
 
-    // get the return data from the function "PreprocessData"
+    // get the return data from the function 'PreprocessData'
     const data = PreprocessData(keys, originalData);
-    console.log(data[0]);
+
     // X axis
     const x = d3.scaleTime()
         .domain(d3.extent(data, d => d.saledate))
@@ -118,7 +121,39 @@ function DrawCharts(keys, originalData) {
             .x(d => x(d.data.saledate))
             .y0(d => y(d[0]))
             .y1(d => y(d[1]))
-        );
+        )
+        .on('mouseover', function (d) {
+            svg.selectAll('path')
+                .style('opacity', 0.2);
+            d3.select(this)
+                .style('opacity', 1);
+        })
+        .on('mousemove', function (d) {
+            // get the key
+            const key = d.key;
+            const displayKey = key.split('-')[0] + ', ' + key.split('-')[1] + ' bedrooms';
+            // get the time index according to the mouse position
+            const mouseX = d3.mouse(this)[0];
+            const timeIndex = Math.floor(mouseX / (width / data.length));
+            // get the data of the time index
+            const value = d[timeIndex][1] - d[timeIndex][0];
+            // set up display time
+            const date = data[timeIndex]['saledate'];
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            const displayDate = year + '/' + month + '/' + day + ' (yyyy/mm/dd)';
+            // set the tooltip
+            tooltip.style('display', 'block')
+                .style('left', (d3.event.pageX + 10) + 'px')
+                .style('top', (d3.event.pageY + 10) + 'px')
+                .html(displayKey + '<br>' + 'date: ' + displayDate + '<br>' + 'value: ' + value);
+        })
+        .on('mouseout', function (d) {
+            tooltip.style('display', 'none');
+            svg.selectAll('path')
+                .style('opacity', 1);
+        });
 
     // add legend to svg
     const legend = svg.append('g')
@@ -177,7 +212,7 @@ function DragKeys(data) {
         div.setAttribute('class', 'drag-key');
         div.setAttribute('id', keys[i]);
         div.setAttribute('draggable', 'true');
-        div.innerHTML = keys[i].split('-')[0] + ', ' + keys[i].split('-')[1] + 'bedrooms(' + keys[i] + ')';
+        div.innerHTML = keys[i].split('-')[0] + ', ' + keys[i].split('-')[1] + ' bedrooms(' + keys[i] + ')';
         drag.appendChild(div);
     }
     var mouseDrag = d3.drag()

@@ -27,9 +27,6 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    margin-bottom: 5vh;
-    border-top: 1px solid black;
-    border-bottom: 1px solid black;
 }
 
 .drag-key {
@@ -49,4 +46,14 @@ body {
 
 .x-axis, .y-axis {
     font-size: 12px;
+}
+
+#tooltip {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px;
+    border-radius: 3px;
+    display: none;
+    pointer-events: none;
 }
