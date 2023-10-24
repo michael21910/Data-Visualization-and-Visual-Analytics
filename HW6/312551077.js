@@ -14,19 +14,8 @@ const svg = d3.select('#themeriver')
     .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
 function PreprocessData(data) {
-    // sort data by saledate in ascending order
-    data.sort((a, b) => a.saledate - b.saledate);
-    // list to store the keys of the preprocessed data
-    var keys = ['saledate'];
-    // get all keys of the preprocessed data
-    for (let i = 0; i < data.length; i++) {
-        const newAttr = data[i].type + '-' + data[i].bedrooms;
-        if (keys.indexOf(newAttr) === -1) {
-            keys.push(newAttr);
-        }
-    }
-    // sort the keys
-    keys.sort();
+    // get the keys of the data
+    const keys = GetKeys(data);
     // create object base on keys
     var preprocessedData = [];
     var currentDate = new Date(1970, 1, 1);
@@ -67,24 +56,11 @@ function PreprocessData(data) {
     return [keys, preprocessedData];
 }
 
-// read data
-d3.csv('./ma_lga_12345.csv').then((data) => {
-    // preprocess data
-    data.forEach(d => {
-        const dateInformation = d.saledate.split('/');
-        const day = parseInt(dateInformation[0], 10);
-        const month = parseInt(dateInformation[1], 10) - 1;
-        const year = parseInt(dateInformation[2]);
-        d.saledate = new Date(year, month, day);
-        d.MA = +d.MA;
-        d.type = d.type;
-        d.bedrooms = +d.bedrooms;
-    });
-
+function DrawCharts(originalData) {
     // get the return data from the function "PreprocessData"
-    const ReturnOfPreprocessData = PreprocessData(data);
+    const ReturnOfPreprocessData = PreprocessData(originalData);
     const keys = ReturnOfPreprocessData[0];
-    data = ReturnOfPreprocessData[1];
+    const data = ReturnOfPreprocessData[1];
 
     // X axis
     const x = d3.scaleTime()
@@ -149,6 +125,7 @@ d3.csv('./ma_lga_12345.csv').then((data) => {
     const legend = svg.append('g')
         .attr('transform', 'translate(' + (width - 100) + ', 20)');
 
+    // legend icon
     legend.selectAll('rect')
         .data(keys.filter(function (key) {
             return key !== 'saledate';
@@ -161,6 +138,7 @@ d3.csv('./ma_lga_12345.csv').then((data) => {
         .attr('height', 18)
         .style('fill', d => color(d));
 
+    // legend text
     legend.selectAll('text')
         .data(keys.filter(function (key) {
             return key !== 'saledate';
@@ -172,4 +150,52 @@ d3.csv('./ma_lga_12345.csv').then((data) => {
         .style('font-size', '14px')
         .text(d => d)
         .attr('alignment-baseline', 'middle');
+}
+
+function GetKeys(data) {
+    // sort data by saledate in ascending order
+    data.sort((a, b) => a.saledate - b.saledate);
+    // list to store the keys of the preprocessed data
+    var keys = ['saledate'];
+    // get all keys of the preprocessed data
+    for (let i = 0; i < data.length; i++) {
+        const newAttr = data[i].type + '-' + data[i].bedrooms;
+        if (keys.indexOf(newAttr) === -1) {
+            keys.push(newAttr);
+        }
+    }
+    // return the keys after sorting
+    return keys.sort();
+}
+
+function DragKeys(data) {
+    const keys = GetKeys(data).filter(function (key) {
+        return key !== 'saledate';
+    }).reverse();
+    const drag = document.getElementById('drag');
+    for (let i = 0; i < keys.length; i++) {
+        const div = document.createElement('div');
+        div.setAttribute('class', 'drag-key');
+        div.setAttribute('id', keys[i]);
+        div.setAttribute('draggable', 'true');
+        div.innerHTML = keys[i].split('-')[0] + ', ' + keys[i].split('-')[1] + 'bedrooms(' + keys[i] + ')';
+        drag.appendChild(div);
+    }
+}
+
+// read data
+d3.csv('./ma_lga_12345.csv').then((data) => {
+    // preprocess data
+    data.forEach(d => {
+        const dateInformation = d.saledate.split('/');
+        const day = parseInt(dateInformation[0], 10);
+        const month = parseInt(dateInformation[1], 10) - 1;
+        const year = parseInt(dateInformation[2]);
+        d.saledate = new Date(year, month, day);
+        d.MA = +d.MA;
+        d.type = d.type;
+        d.bedrooms = +d.bedrooms;
+    });
+    DrawCharts(data);
+    DragKeys(data);
 });
