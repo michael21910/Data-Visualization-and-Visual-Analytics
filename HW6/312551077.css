@@ -27,6 +27,7 @@
     flex-direction: row;
     justify-content: center;
     align-items: center;
+    margin-bottom: 5vh;
 }
 
 .x-axis, .y-axis {
