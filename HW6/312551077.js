@@ -220,12 +220,14 @@ function DragKeys(data) {
         return key !== 'saledate';
     }).reverse();
     const drag = document.getElementById('drag');
+    const colorMap = ['#ff0000', '#ff8000', '#ffff00', '#00ff00', '#00ffff', '#0000ff', '#ff00ff']
     for (let i = 0; i < keys.length; i++) {
         const div = document.createElement('div');
         div.setAttribute('class', 'drag-key');
         div.setAttribute('id', keys[i]);
         div.setAttribute('draggable', 'true');
         div.setAttribute('margin-bottom', '12px');
+        div.setAttribute('style', 'background-color: ' + colorMap[i] + 'AA' + ';');
         div.innerHTML = keys[i].split('-')[0] + ', ' + keys[i].split('-')[1] + ' bedrooms(' + keys[i] + ')';
         drag.appendChild(div);
     }
