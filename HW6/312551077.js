@@ -13,9 +13,7 @@ const svg = d3.select('#themeriver')
     .append('g')
     .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-function PreprocessData(data) {
-    // get the keys of the data
-    const keys = GetKeys(data);
+function PreprocessData(keys, data) {
     // create object base on keys
     var preprocessedData = [];
     var currentDate = new Date(1970, 1, 1);
@@ -53,15 +51,16 @@ function PreprocessData(data) {
         }
         preprocessedData[i] = temp;
     }
-    return [keys, preprocessedData];
+    return preprocessedData;
 }
 
-function DrawCharts(originalData) {
-    // get the return data from the function "PreprocessData"
-    const ReturnOfPreprocessData = PreprocessData(originalData);
-    const keys = ReturnOfPreprocessData[0];
-    const data = ReturnOfPreprocessData[1];
+function DrawCharts(keys, originalData) {
+    // clear all svg
+    svg.selectAll('*').remove();
 
+    // get the return data from the function "PreprocessData"
+    const data = PreprocessData(keys, originalData);
+    console.log(data[0]);
     // X axis
     const x = d3.scaleTime()
         .domain(d3.extent(data, d => d.saledate))
@@ -98,9 +97,9 @@ function DrawCharts(originalData) {
         .attr('text-anchor', 'middle')
         .text('Price');
 
-    // set color
+    // set color map
     const color = d3.scaleOrdinal()
-        .domain(keys)
+        .domain(['unit-1', 'unit-2', 'unit-3', 'house-2', 'house-3', 'house-4', 'house-5'])
         .range(d3.schemeCategory10);
 
     // stack data
@@ -169,7 +168,7 @@ function GetKeys(data) {
 }
 
 function DragKeys(data) {
-    const keys = GetKeys(data).filter(function (key) {
+    var keys = GetKeys(data).filter(function (key) {
         return key !== 'saledate';
     }).reverse();
     const drag = document.getElementById('drag');
@@ -181,6 +180,52 @@ function DragKeys(data) {
         div.innerHTML = keys[i].split('-')[0] + ', ' + keys[i].split('-')[1] + 'bedrooms(' + keys[i] + ')';
         drag.appendChild(div);
     }
+    var mouseDrag = d3.drag()
+        .on('start', function () {
+            // set the style of the drag key
+            d3.select(this)
+                .style('opacity', 0.5)
+                .style('border', '1px dashed black');
+        })
+        .on('drag', function () {
+            // get all of the drag keys
+            const dragKeys = document.getElementsByClassName('drag-key');
+            // mouse position Y
+            const mouseY = d3.event.y + dragKeys[0].getBoundingClientRect().y;
+            let inserted = false;
+            // iterate through all of the drag keys
+            for (let i = 0; i < dragKeys.length; i++) {
+                // get the Y position of the drag key
+                const dragKeyY = dragKeys[i].getBoundingClientRect().y + dragKeys[i].getBoundingClientRect().height / 2;
+                // if the mouse position Y is smaller than the drag key Y, do the insertion
+                if (mouseY < dragKeyY) {
+                    drag.insertBefore(d3.select(this).node(), dragKeys[i]);
+                    inserted = true;
+                    break;
+                }
+            }
+            // inserted is false means that mouse position Y is larger than all of the drag keys, so swap with the last drag key
+            if (!inserted) {
+                drag.appendChild(d3.select(this).node());
+            }
+        })
+        .on('end', function () {
+            d3.select(this)
+                .style('opacity', 1)
+                .style('border', '1px solid black');
+            // get all of the drag keys
+            const dragKeys = document.getElementsByClassName('drag-key');
+            keys = [];
+            for (let i = 0; i < dragKeys.length; i++) {
+                keys.push(dragKeys[i].id);
+            }
+            keys.reverse();
+            keys.push('saledate');
+            // redraw the themeriver
+            DrawCharts(keys, data);
+        });
+
+    d3.selectAll('.drag-key').call(mouseDrag);
 }
 
 // read data
@@ -196,6 +241,7 @@ d3.csv('./ma_lga_12345.csv').then((data) => {
         d.type = d.type;
         d.bedrooms = +d.bedrooms;
     });
-    DrawCharts(data);
+    const keys = GetKeys(data);
+    DrawCharts(keys, data);
     DragKeys(data);
 });
