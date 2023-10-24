@@ -102,8 +102,8 @@ function DrawCharts(keys, originalData) {
 
     // set color map
     const color = d3.scaleOrdinal()
-        .domain(['unit-1', 'unit-2', 'unit-3', 'house-2', 'house-3', 'house-4', 'house-5'])
-        .range(d3.schemeCategory10);
+        .domain(['unit-3', 'unit-2', 'unit-1', 'house-5', 'house-4', 'house-3', 'house-2'])
+        .range(['#ff0000', '#ff8000', '#ffff00', '#00ff00', '#00ffff', '#0000ff', '#ff00ff']);
 
     // stack data
     const stackedData = d3.stack()
@@ -124,7 +124,7 @@ function DrawCharts(keys, originalData) {
         )
         .on('mouseover', function (d) {
             svg.selectAll('path')
-                .style('opacity', 0.2);
+                .style('opacity', 0.1);
             d3.select(this)
                 .style('opacity', 1);
         })
@@ -147,7 +147,7 @@ function DrawCharts(keys, originalData) {
             tooltip.style('display', 'block')
                 .style('left', (d3.event.pageX + 10) + 'px')
                 .style('top', (d3.event.pageY + 10) + 'px')
-                .html(displayKey + '<br>' + 'date: ' + displayDate + '<br>' + 'value: ' + value);
+                .html(displayKey + '<br>' + 'date: ' + displayDate + '<br>' + 'MA: ' + value);
         })
         .on('mouseout', function (d) {
             tooltip.style('display', 'none');
@@ -170,7 +170,8 @@ function DrawCharts(keys, originalData) {
         .attr('y', (d, i) => i * 20)
         .attr('width', 18)
         .attr('height', 18)
-        .style('fill', d => color(d));
+        .style('fill', d => color(d))
+        .style('stroke', 'black');
 
     // legend text
     legend.selectAll('text')
@@ -180,10 +181,10 @@ function DrawCharts(keys, originalData) {
         .enter()
         .append('text')
         .attr('x', 25)
-        .attr('y', (d, i) => i * 20 + 9)
+        .attr('y', (d, i) => i * 20 + 14)
         .style('font-size', '14px')
         .text(d => d)
-        .attr('alignment-baseline', 'middle');
+        .attr('text-align', 'middle')
 }
 
 function GetKeys(data) {
