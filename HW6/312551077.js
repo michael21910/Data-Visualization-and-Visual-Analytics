@@ -112,6 +112,19 @@ function DrawCharts(keys, originalData) {
             return key !== 'saledate';
         }))(data);
 
+    // add background line, representing each saledate
+    svg.selectAll('.saledate-line')
+    .data(data)
+    .enter()
+    .append('line')
+    .attr('class', 'saledate-line')
+    .attr('x1', d => x(d.saledate))
+    .attr('x2', d => x(d.saledate))
+    .attr('y1', 0)
+    .attr('y2', height)
+    .style('stroke', '#ddd')
+    .style('stroke-dasharray', '3, 3');
+
     // draw themeriver
     svg.selectAll('mylayers')
         .data(stackedData)
@@ -154,7 +167,7 @@ function DrawCharts(keys, originalData) {
             svg.selectAll('path')
                 .style('opacity', 1);
         });
-
+    
     // add legend to svg
     const legend = svg.append('g')
         .attr('transform', 'translate(' + (width - 100) + ', 20)');
@@ -171,7 +184,7 @@ function DrawCharts(keys, originalData) {
         .attr('width', 18)
         .attr('height', 18)
         .style('fill', d => color(d))
-        .style('stroke', 'black');
+        .style('stroke', 'black');        
 
     // legend text
     legend.selectAll('text')
@@ -183,8 +196,7 @@ function DrawCharts(keys, originalData) {
         .attr('x', 25)
         .attr('y', (d, i) => i * 20 + 14)
         .style('font-size', '14px')
-        .text(d => d)
-        .attr('text-align', 'middle')
+        .text(d => d);
 }
 
 function GetKeys(data) {
@@ -213,6 +225,7 @@ function DragKeys(data) {
         div.setAttribute('class', 'drag-key');
         div.setAttribute('id', keys[i]);
         div.setAttribute('draggable', 'true');
+        div.setAttribute('margin-bottom', '12px');
         div.innerHTML = keys[i].split('-')[0] + ', ' + keys[i].split('-')[1] + ' bedrooms(' + keys[i] + ')';
         drag.appendChild(div);
     }

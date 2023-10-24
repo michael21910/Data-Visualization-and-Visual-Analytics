@@ -25,13 +25,14 @@ body {
 #drag {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: space-between;
+    height: 180px;
     align-items: center;
 }
 
 .drag-key {
     cursor: pointer;
-    padding: 0 10px;
+    padding: 2.5px 10px;
     border: 1px solid black;
     border-radius:12px;
 }
