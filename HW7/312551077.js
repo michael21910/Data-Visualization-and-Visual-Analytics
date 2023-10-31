@@ -8,14 +8,6 @@ const height = 800 - margin.top - margin.bottom;
 // decimal for rounding
 const decimal = 100000;
 
-// create svg
-const svg = d3.select('#horizonChart')
-    .append('svg')
-    .attr('width', width + margin.left + margin.right)
-    .attr('height', height + margin.top + margin.bottom)
-    .append('g')
-    .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-
 // preprocess data
 function PreprocessData(data) {
     var returnData = [];
@@ -44,12 +36,12 @@ function PreprocessData(data) {
                 Address: data[i - 1]['Address'],
                 Latitude: data[i - 1]['Latitude'],
                 Longitude: data[i - 1]['Longitude'],
-                SO2: SO2Mean,
-                NO2: NO2Mean,
-                O3: O3Mean,
-                CO: COMean,
-                PM10: PM10Mean,
-                PM25: PM25Mean
+                SO2Mean: SO2Mean,
+                NO2Mean: NO2Mean,
+                O3Mean: O3Mean,
+                COMean: COMean,
+                PM10Mean: PM10Mean,
+                PM25Mean: PM25Mean
             });
             // reset / refresh data
             SO2Mean = 0;
@@ -81,9 +73,51 @@ function GetMeasurementDate(measurementDate) {
     return measurementDate.split(' ')[0];
 }
 
+function CreateHorizonChart(data, attribute, svg, xScale, yScale) {
+    const area = d3.area()
+        .x(function (d) { return xScale(new Date(d.measurementDate)); })
+        .y0(height)
+        .y1(function (d) { return height - yScale(d[attribute]); })
+        .curve(d3.curveBasis);
+
+    svg.append("path")
+        .datum(data)
+        .attr("class", "horizon")
+        .attr("d", area)
+        .style("fill", "steelblue");
+}
+
 // read csv
 d3.csv('./AirPollutionSeoul/Measurement_summary.csv').then(function (data) {
     var processedData = PreprocessData(data);
-    console.log(processedData);
-    
+    console.log(processedData[0]);
+
+    const attributes = ['SO2Mean', 'NO2Mean', 'O3Mean', 'COMean', 'PM10Mean', 'PM25Mean']
+
+    for (let i = 0; i < attributes.length; i++) {
+        // create svg   
+        const svg = d3.select('#horizonChart')
+            .append('svg')
+            .attr('width', width + margin.left + margin.right)
+            .attr('height', height + margin.top + margin.bottom)
+            .append('g')
+            .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+        // create x scale
+        var xScale = d3.scaleTime()
+            .domain(d3.extent(processedData, function (d) { return new Date(d.measurementDate); }))
+            .range([0, width]);
+
+        // draw x axis
+        svg.append('g')
+            .attr('transform', 'translate(0, 0)')
+            .call(d3.axisTop(xScale));
+
+        // create y scale
+        var yScale = d3.scaleLinear()
+            .domain([0, d3.max(processedData, function (d) { return d[attributes[i]]; })])
+            .range([0, height]);
+
+        CreateHorizonChart(processedData, attributes[i], svg, xScale, yScale);
+    }
 });

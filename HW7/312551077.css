@@ -32,9 +32,9 @@ body {
     border-bottom: 1px solid black;
 }
 
-#themeriver {
+#horizonChart {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     margin-bottom: 5vh;
