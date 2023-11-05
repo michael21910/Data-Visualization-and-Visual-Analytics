@@ -73,18 +73,8 @@ function GetMeasurementDate(measurementDate) {
     return measurementDate.split(' ')[0];
 }
 
-function CreateHorizonChart(data, attribute, svg, xScale, yScale) {
-    const area = d3.area()
-        .x(function (d) { return xScale(new Date(d.measurementDate)); })
-        .y0(height)
-        .y1(function (d) { return height - yScale(d[attribute]); })
-        .curve(d3.curveBasis);
-
-    svg.append("path")
-        .datum(data)
-        .attr("class", "horizon")
-        .attr("d", area)
-        .style("fill", "steelblue");
+function CreateHorizonChart() {
+    
 }
 
 // read csv
@@ -112,12 +102,5 @@ d3.csv('./AirPollutionSeoul/Measurement_summary.csv').then(function (data) {
         svg.append('g')
             .attr('transform', 'translate(0, 0)')
             .call(d3.axisTop(xScale));
-
-        // create y scale
-        var yScale = d3.scaleLinear()
-            .domain([0, d3.max(processedData, function (d) { return d[attributes[i]]; })])
-            .range([0, height]);
-
-        CreateHorizonChart(processedData, attributes[i], svg, xScale, yScale);
     }
 });
