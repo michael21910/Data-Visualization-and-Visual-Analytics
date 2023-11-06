@@ -1,12 +1,22 @@
 // http://vis.lab.djosix.com:2023/data/air-pollution.csv
 
 // constants for svg
-const margin = { top: 20, right: 20, bottom: 20, left: 20 };
+const margin = { top: 20, right: 20, bottom: 40, left: 40 };
 const width = 1200 - margin.left - margin.right
-const height = 800 - margin.top - margin.bottom;
+const height = 150;
 
 // decimal for rounding
 const decimal = 100000;
+
+// data translation dictionary
+const dataTranslation = {
+    'SO2Mean': 'SO2 Mean',
+    'NO2Mean': 'NO2 Mean',
+    'O3Mean': 'O3 Mean',
+    'COMean': 'CO Mean',
+    'PM10Mean': 'PM10 Mean',
+    'PM25Mean': 'PM2.5 Mean'
+}
 
 // preprocess data
 function PreprocessData(data) {
@@ -73,34 +83,92 @@ function GetMeasurementDate(measurementDate) {
     return measurementDate.split(' ')[0];
 }
 
-function CreateHorizonChart() {
-    
-}
-
 // read csv
-d3.csv('./AirPollutionSeoul/Measurement_summary.csv').then(function (data) {
+d3.csv('http://vis.lab.djosix.com:2023/data/air-pollution.csv').then(function (data) {
     var processedData = PreprocessData(data);
-    console.log(processedData[0]);
 
     const attributes = ['SO2Mean', 'NO2Mean', 'O3Mean', 'COMean', 'PM10Mean', 'PM25Mean']
+    const colors = ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00', '#a65628']
+    attributes.reverse();
+    colors.reverse();
+    
+    var stationList = [];
+    for (let i = 0; i < processedData.length; i++) {
+        if (stationList.indexOf(processedData[i]['StationCode']) === -1) {
+            stationList.push(processedData[i]['StationCode']);
+        }
+    }
 
     for (let i = 0; i < attributes.length; i++) {
-        // create svg   
-        const svg = d3.select('#horizonChart')
-            .append('svg')
-            .attr('width', width + margin.left + margin.right)
-            .attr('height', height + margin.top + margin.bottom)
-            .append('g')
-            .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+        for (let j = 0; j < stationList.length; j++) {
 
-        // create x scale
-        var xScale = d3.scaleTime()
-            .domain(d3.extent(processedData, function (d) { return new Date(d.measurementDate); }))
-            .range([0, width]);
+            const svg = d3.select('#horizonChart')
+                .append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.bottom + margin.top);
 
-        // draw x axis
-        svg.append('g')
-            .attr('transform', 'translate(0, 0)')
-            .call(d3.axisTop(xScale));
+            // filter data
+            var filteredData = processedData.filter(function (d) {
+                return d.StationCode === stationList[j];
+            }).map(function (d) {
+                return {
+                    measurementDate: d['measurementDate'],
+                    StationCode: d['StationCode'],
+                    Address: d['Address'],
+                    Latitude: d['Latitude'],
+                    Longitude: d['Longitude'],
+                    SO2Mean: d['SO2Mean'],
+                    NO2Mean: d['NO2Mean'],
+                    O3Mean: d['O3Mean'],
+                    COMean: d['COMean'],
+                    PM10Mean: d['PM10Mean'],
+                    PM25Mean: d['PM25Mean'],
+                    dataName: attributes[i]
+                }
+            });
+            
+            // x axis
+            var x = d3.scaleTime()
+                .domain(d3.extent(filteredData, function (d) { return new Date(d.measurementDate); }))
+                .range([0, width]);
+
+            // y axis
+            var yExtent = d3.extent(filteredData, function (d) { return d[attributes[i]]; }).map(function (d) {
+                return d * 1.5;
+            });
+            var y = d3.scaleLinear()
+                .domain(yExtent)
+                .range([height, 0]);
+
+            // area
+            var area = d3.area()
+                .curve(d3.curveBasis)
+                .x(function (d) { return x(new Date(d.measurementDate)); })
+                .y0(height)
+                .y1(function (d) { return y(d[attributes[i]]); });
+
+            // draw area
+            svg.append('path')
+                .datum(filteredData)
+                .attr('class', 'area')
+                .attr('fill', colors[i])
+                .attr('d', area);
+
+            // draw x axis
+            svg.append('g')
+                .attr('transform', 'translate(0,' + height + ')')
+                .call(d3.axisBottom(x));
+
+            // draw y axis
+            svg.append('g')
+                .call(d3.axisRight(y));
+
+            // draw subtitle
+            svg.append('text')
+                .attr('x', width / 2)
+                .attr('y', height + 40)
+                .attr('text-anchor', 'middle')
+                .text('[' + dataTranslation[filteredData[0]['dataName']] + '] @ "' + filteredData[0]['Address'] + '" (Station code: ' + filteredData[0]['StationCode'] + ')');
+        }
     }
 });

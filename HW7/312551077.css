@@ -43,3 +43,14 @@ body {
 .x-axis, .y-axis {
     font-size: 12px;
 }
+
+.colorDemo {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.colorDemo div {
+    margin: 0 10px;
+}
