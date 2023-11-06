@@ -280,7 +280,7 @@ function DragKeys(data) {
 }
 
 // read data
-d3.csv('./ma_lga_12345.csv').then((data) => {
+d3.csv('http://vis.lab.djosix.com:2023/data/ma_lga_12345.csv').then((data) => {
     // preprocess data
     data.forEach(d => {
         const dateInformation = d.saledate.split('/');
