@@ -46,7 +46,7 @@ function GetSankeyData(data) {
 // constants for svg
 const margin = { top: 20, right: 20, bottom: 40, left: 40 };
 const width = 1400 - margin.left - margin.right
-const height = 700 - margin.top - margin.bottom;
+const height = 800 - margin.top - margin.bottom;
 
 // get tooltip
 const tooltip = d3.select('#tooltip')
@@ -55,7 +55,7 @@ const tooltip = d3.select('#tooltip')
 const color = d3.scaleOrdinal(d3.schemeCategory10);
 
 // append the svg object to the body of the page
-var svg = d3.select("body")
+var svg = d3.select("#SankeyDiagram")
     .append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
@@ -74,14 +74,6 @@ fetch(dataPath)
     .then(response => response.text())
     .then(data => {
         const sankeyData = GetSankeyData(data)
-
-        // create svg
-        d3.select('#SankeyDiagram')
-            .append('svg')
-            .attr('width', width + margin.left + margin.right)
-            .attr('height', height + margin.bottom + margin.top)
-            .append('g')
-            .attr('transform', `translate(${margin.left},${margin.top})`);
 
         // create sankey
         const sankey = d3.sankey()
@@ -122,10 +114,6 @@ fetch(dataPath)
         sankey.nodes(graph.nodes)
             .links(graph.links)
             .layout(32);
-
-        const svg = d3.select('#SankeyDiagram')
-            .select('svg')
-            .select('g');
 
         // add in the links
         var link = svg.append("g")
