@@ -3,16 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" type="text/css" href="./312551077.css">
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script type="module" src="./312551077.js"></script>
     <title>312551077 - Spotify Tracks Dataset</title>
 </head>
 <body>
     <h1 class="title">312551077 - Spotify Tracks Dataset</h1>
 
-    <div id="message"></div>
+    <div id="message">Loading... Please wait...</div>
 
-    <div id="spotify"></div>
+    <div id="button-container">
+        <button id="button">Show Correlation Matrix</button>
+    </div>
 
-    <script src="https://d3js.org/d3.v5.min.js"></script>
-    <script type="module" src="./312551077.js"></script>
+    <div class="spotify">
+        <svg id="spotify"></svg>
+    </div>
+
+    <div id="tooltip" class="tooltip"></div>
 </body>
 </html>

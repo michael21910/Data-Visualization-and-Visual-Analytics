@@ -73,7 +73,7 @@ var path = sankey.link();
 fetch(dataPath)
     .then(response => response.text())
     .then(data => {
-        const sankeyData = GetSankeyData(data)
+        const sankeyData = GetSankeyData(data);
 
         // create sankey
         const sankey = d3.sankey()

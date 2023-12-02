@@ -14,7 +14,41 @@ body {
     color: red;
     font-size: 16px;
     text-align: center;
-    margin-bottom: 5vh;
+}
+
+@keyframes breathe {
+    0% {
+        opacity: 0.3;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0.3;
+    }
+}
+  
+#message.loading {
+    animation: breathe 1.25s infinite ease-in-out;
+}
+  
+#button-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 1.5vh 0;
+}
+
+#button {
+    padding: 12px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+#button:hover {
+    background-color: black;
+    color: #f5f5f5;
+    transition: 0.25s;
 }
 
 .title {
@@ -22,17 +56,7 @@ body {
     margin: 5vh 0;
 }
 
-#drag {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 5vh;
-    border-top: 1px solid black;
-    border-bottom: 1px solid black;
-}
-
-#horizonChart {
+.spotify {
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -40,17 +64,12 @@ body {
     margin-bottom: 5vh;
 }
 
-.x-axis, .y-axis {
+.scatter-button {
+    width:100%;
+    height:100%;
     font-size: 12px;
 }
 
-.colorDemo {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-}
-
-.colorDemo div {
-    margin: 0 10px;
+.high-correlation {
+    text-decoration: underline;
 }
