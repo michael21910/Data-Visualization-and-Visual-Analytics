@@ -32,6 +32,12 @@ export class DataObj {
         this.correlationMatrix = [];
     }
 
+    SetOriginalAttributes() {
+        this.attributes = [this.popularity, this.durationMS, this.danceability, this.energy,
+            this.key, this.loudness, this.mode, this.speechiness, this.acousticness,
+            this.instrumentalness, this.liveness, this.valence, this.tempo, this.timeSignature];
+    }
+
     GetAttributesDataByName(name) {
         switch (name) {
             case "popularity":

@@ -3,6 +3,7 @@
 import { DataObj } from "./312551077_DataObj.js";
 
 var dataObj;
+var selectedGenre = "All";
 
 // constants for svg
 const margin = { top: 60, right: 20, bottom: 120, left: 120 };
@@ -16,6 +17,7 @@ const attributes = ["popularity", "durationMS", "danceability", "energy", "key",
 document.getElementById('button').addEventListener('click', function() {
     document.getElementById('message').innerHTML = "Loading... Please wait...";
     document.getElementById('message').classList.add('loading');
+    selectedGenre = document.getElementById("track-genre").value;
     RenderCorrelationMatrix();
 });
 
@@ -24,13 +26,14 @@ async function RenderCorrelationMatrix() {
     // remove previous svg
     d3.select("#spotify").html("");
     // read csv
+    // const data = await d3.csv('http://vis.lab.djosix.com:2023/data/spotify_tracks.csv');
     const data = await d3.csv('./spotify_tracks.csv');
     // Create DataObj with filtered data
     dataObj = new DataObj(data);
     // Draw correlation matrix
     DrawCorrelationMatrix(dataObj, "#spotify");
     // set finish loading message
-    document.getElementById('message').innerHTML = "This visualization system is for showing the relationship between different attributes.<br>1. Click the rectangles in the correlation matrix to see the scatter plot of the two attributes.<br>2. Click the \"Show Correlation Matrix\" to display the correlation matrix.<br>3. In the correlation matrix, the element will be underlined if the absolute value is greater than or equal to 0.5.";
+    document.getElementById('message').innerHTML = "This visualization system is for showing the relationship between different attributes.<br>1. Click the rectangles in the correlation matrix to see the scatter plot of the two attributes.<br>2. Click the \"Show Correlation Matrix\" to display the correlation matrix. You can also choose a specific genre.<br>3. In the correlation matrix, the element will be underlined if the absolute value is greater than or equal to 0.5.";
     // remove breathing light
     document.getElementById('message').classList.remove('loading');
 }
@@ -49,7 +52,40 @@ function RenderScatterPlot(attr1, attr2) {
 
 // draw correlation matrix
 function DrawCorrelationMatrix(dataObj, tagName) {
+    // add genre to select tag
+    AddGenreToSelect(dataObj.trackGenre, selectedGenre);
+
+    // filter the dataObj by the chosen genre
+    if (selectedGenre === "All") {
+        dataObj.SetOriginalAttributes();
+    }
+    else {
+        const attributeSize = dataObj.attributes.length;
+        dataObj.attributes = [];
+        for (let i = 0; i < attributeSize; i++) {
+            dataObj.attributes.push([]);
+        }
+        for (let i = 0; i < dataObj.fullData[20].length; i++) {
+            if (dataObj.fullData[20][i] === selectedGenre) {
+                dataObj.attributes[0].push(dataObj.fullData[5][i]);
+                dataObj.attributes[1].push(dataObj.fullData[6][i]);
+                dataObj.attributes[2].push(dataObj.fullData[8][i]);
+                dataObj.attributes[3].push(dataObj.fullData[9][i]);
+                dataObj.attributes[4].push(dataObj.fullData[10][i]);
+                dataObj.attributes[5].push(dataObj.fullData[11][i]);
+                dataObj.attributes[6].push(dataObj.fullData[12][i]);
+                dataObj.attributes[7].push(dataObj.fullData[13][i]);
+                dataObj.attributes[8].push(dataObj.fullData[14][i]);
+                dataObj.attributes[9].push(dataObj.fullData[15][i]);
+                dataObj.attributes[10].push(dataObj.fullData[16][i]);
+                dataObj.attributes[11].push(dataObj.fullData[17][i]);
+                dataObj.attributes[12].push(dataObj.fullData[18][i]);
+                dataObj.attributes[13].push(dataObj.fullData[19][i]);
+            }
+        }
+    }
     const correlationMatrix = dataObj.CalcCorrelationMatrix();
+    
 
     // create svg
     const svg = d3.select(tagName)
@@ -153,6 +189,21 @@ function DrawScatterPlot(attr1, attr2) {
     // get corresponding data
     const xData = dataObj.GetAttributesDataByName(attr1);
     const yData = dataObj.GetAttributesDataByName(attr2);
+
+    if (selectedGenre !== "All") {
+        var deleteIndex = [];
+        // filter data according to the filter
+        for (let i = 0; i < dataObj.fullData[20].length; i++) {
+            if (dataObj.fullData[20][i] !== selectedGenre) {
+                deleteIndex.push(i);
+            }
+        }
+        for (let i = deleteIndex.length - 1; i >= 0; i--) {
+            xData.splice(deleteIndex[i], 1);
+            yData.splice(deleteIndex[i], 1);
+        }
+    }
+
     const scatterData = [xData, yData];
 
     // constants for svg
@@ -231,6 +282,28 @@ function DrawScatterPlot(attr1, attr2) {
         .attr("r", 3)
         .style("fill", "steelblue")
         .style("opacity", 0.5);
+}
+
+// add genre to select tag
+function AddGenreToSelect(trackGenre, selectedGenre) {
+    // get all genres, add to html tag
+    const genreSet = new Set(trackGenre);
+    var trackGenreTag = document.getElementById('track-genre');
+    // clear all options
+    trackGenreTag.innerHTML = "";
+    // add a default option
+    var defaultGenre = document.createElement("option");
+    defaultGenre.text = "All";
+    trackGenreTag.add(defaultGenre);
+    // add all genres into select tag
+    genreSet.forEach(genre => {
+        var option = document.createElement("option");
+        option.text = genre;
+        if (genre == selectedGenre) {
+            option.selected = true;
+        }
+        trackGenreTag.add(option);
+    });
 }
 
 // first time rendering, add breathing light
