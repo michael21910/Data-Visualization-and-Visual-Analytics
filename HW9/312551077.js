@@ -26,8 +26,8 @@ async function RenderCorrelationMatrix() {
     // remove previous svg
     d3.select("#spotify").html("");
     // read csv
-    // const data = await d3.csv('http://vis.lab.djosix.com:2023/data/spotify_tracks.csv');
-    const data = await d3.csv('./spotify_tracks.csv');
+    const data = await d3.csv('http://vis.lab.djosix.com:2023/data/spotify_tracks.csv');
+    // const data = await d3.csv('./spotify_tracks.csv');
     // Create DataObj with filtered data
     dataObj = new DataObj(data);
     // Draw correlation matrix
