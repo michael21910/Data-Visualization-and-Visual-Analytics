@@ -9,6 +9,15 @@ const mapLink = "./LOLMinimap.jpg"
 const dataDictionary = {};
 var minute = 0;
 var second = 0;
+var animationSpeed = 1;
+
+const speedSlider = document.getElementById('speedSlider');
+speedSlider.addEventListener('input', function() {
+    // Update the animation speed when the slider is moved
+    animationSpeed = speedSlider.value;
+    const formattedSpeed = parseFloat(animationSpeed).toFixed(2);
+    document.getElementById('sliderText').innerHTML = `Speed: x${formattedSpeed}`;
+});
 
 // timer add 1 second
 function TimerAddOneSecond() {
@@ -62,9 +71,14 @@ function SetSelectionTag() {
 }
 
 // the main animation function
-function DoAmination() {
+async function DoAmination() {
     // reset the timer
     TimerReset();
+    
+    // reset the speed slider
+    document.getElementById('speedSlider').value = 1;
+    animationSpeed = 1;
+    document.getElementById('sliderText').innerHTML = 'Speed: x1.00';
 
     // get the data of the match
     const matchData = dataDictionary[document.getElementById('matchSelect').value];
@@ -81,31 +95,37 @@ function DoAmination() {
 
     // draw the circles
     for (let i = 0; i < matchData.length; i++) {
-        // draw a circle for each player under a fixed time
-        setTimeout(() => {
-            // add 1 second to the timer
-            TimerAddOneSecond();
+        // add 1 second to the timer
+        TimerAddOneSecond();
 
-            const playerRowData = matchData[i];
-            const isTeamfight = playerRowData[20] === 1;
+        const playerRowData = matchData[i];
+        const isTeamfight = playerRowData[20] === 1;
 
-            for (let j = 0; j < 10; j++) {
-                const playerX = playerRowData[j * 2];
-                const playerY = playerRowData[j * 2 + 1];
-                const isBlueTeam = j < 5;
+        // Create a Promise for each player to show their position
+        const playerPromises = [];
 
-                const circle = svg.append('circle')
-                    .attr('cx', xScale(playerX))
-                    .attr('cy', yScale(playerY))
-                    .attr('r', 5)
-                    .attr('fill', isBlueTeam ? 'blue' : 'red');
+        for (let j = 0; j < 10; j++) {
+            const playerX = playerRowData[j * 2];
+            const playerY = playerRowData[j * 2 + 1];
+            const isBlueTeam = j < 5;
 
-                // after a fixed time, remove the circle
+            const circle = svg.append('circle')
+                .attr('cx', xScale(playerX))
+                .attr('cy', yScale(playerY))
+                .attr('r', 5)
+                .attr('fill', isBlueTeam ? 'blue' : 'red');
+
+            playerPromises.push(new Promise(resolve => {
+                // after a fixed time, resolve the Promise
                 setTimeout(() => {
                     circle.remove();
-                }, 20);
-            }
-        }, i * 20);
+                    resolve();
+                }, 20 / animationSpeed);
+            }));
+        }
+
+        // Wait for all players to finish showing their positions before moving to the next frame
+        await Promise.all(playerPromises);
     }
 }
 

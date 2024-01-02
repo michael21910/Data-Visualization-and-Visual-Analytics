@@ -44,3 +44,15 @@ body {
     border-radius: 12px;
     font-size: 16px;
 }
+
+.slider-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: center;
+    margin-top: 2.5vh;
+}
+
+.slider-container input {
+    width: 35vw;
+}
