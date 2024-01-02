@@ -1,0 +1,46 @@
+* {
+    margin: 0;
+    padding: 0;
+    font-family: "Lucida Console", monospace;
+    background-color: #f5f5f5;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+.title {
+    text-align: center;
+    margin: 5vh 0;
+}
+
+#message {
+    color: red;
+    font-size: 16px;
+    text-align: center;
+}
+
+
+.animation {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-top: 5vh;
+    margin-bottom: 2.5vh;
+}
+
+.select-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    margin-top: 2.5vh;
+}
+
+.select-container select {
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 16px;
+}
