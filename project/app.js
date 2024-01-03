@@ -9,14 +9,35 @@ const mapLink = "./LOLMinimap.jpg"
 const dataDictionary = {};
 var minute = 0;
 var second = 0;
+var totalFrame = 0; // totalFrame = minute * 60 + second
 var animationSpeed = 1;
+var isPaused = false;
+var isAnimating = false;
 
 const speedSlider = document.getElementById('speedSlider');
+const timeSlider = document.getElementById('timeSlider');
+const pauseButton = document.getElementById('pauseButton');
+
+// speed slider event listener
 speedSlider.addEventListener('input', function() {
     // Update the animation speed when the slider is moved
     animationSpeed = speedSlider.value;
     const formattedSpeed = parseFloat(animationSpeed).toFixed(2);
     document.getElementById('sliderText').innerHTML = `Speed: x${formattedSpeed}`;
+});
+
+// pause button event listener
+pauseButton.addEventListener('click', function() {
+    isPaused = !isPaused;
+    if (isPaused) {
+        pauseButton.textContent = 'Resume';
+    }
+    else {
+        pauseButton.textContent = 'Pause';
+        if (!isAnimating) {
+            animateFrame();
+        }
+    }
 });
 
 // timer add 1 second
@@ -26,21 +47,25 @@ function TimerAddOneSecond() {
         second = 0;
         minute++;
     }
-    UpdateTimerDisplay();
+    UpdateDisplay();
 }
 
 // timer reset
 function TimerReset() {
     minute = 0;
     second = 0;
-    UpdateTimerDisplay();
+    UpdateDisplay();
 }
 
 // refresh timer display
-function UpdateTimerDisplay() {
+function UpdateDisplay() {
+    // speed display
     const formattedMinute = minute.toString().padStart(2, '0');
     const formattedSecond = second.toString().padStart(2, '0');
     document.getElementById('message').innerHTML = `time: ${formattedMinute}:${formattedSecond}`;
+    // timer display
+    totalFrame = minute * 60 + second;
+    timeSlider.value = totalFrame;
 }
 
 // set image and svg attr
@@ -83,6 +108,9 @@ async function DoAmination() {
     // get the data of the match
     const matchData = dataDictionary[document.getElementById('matchSelect').value];
 
+    // set the max value for time slider
+    timeSlider.max = matchData.length - 1;
+
     // get the svg
     const svg = d3.select('#animation');
     
@@ -93,6 +121,57 @@ async function DoAmination() {
     const xScale = d3.scaleLinear().domain([0, 15000]).range([0, width]);
     const yScale = d3.scaleLinear().domain([0, 15000]).range([height, 0]);
 
+    let currentIndex = 0;
+
+    async function animateFrame() {
+        if (!isPaused && currentIndex < matchData.length) {
+            // add 1 second to the timer
+            TimerAddOneSecond();
+
+            const playerRowData = matchData[currentIndex];
+            const isTeamfight = playerRowData[20] === 1;
+
+            // Create a Promise for each player to show their position
+            const playerPromises = [];
+
+            for (let j = 0; j < 10; j++) {
+                const playerX = playerRowData[j * 2];
+                const playerY = playerRowData[j * 2 + 1];
+                const isBlueTeam = j < 5;
+
+                const circle = svg.append('circle')
+                    .attr('cx', xScale(playerX))
+                    .attr('cy', yScale(playerY))
+                    .attr('r', 5)
+                    .attr('fill', isBlueTeam ? 'blue' : 'red');
+
+                playerPromises.push(new Promise(resolve => {
+                    // after a fixed time, resolve the Promise
+                    setTimeout(() => {
+                        circle.remove();
+                        resolve();
+                    }, 20 / animationSpeed);
+                }));
+            }
+
+            // Wait for all players to finish showing their positions before moving to the next frame
+            await Promise.all(playerPromises);
+
+            // Move to the next frame
+            currentIndex++;
+
+            // Call the next frame asynchronously
+            requestAnimationFrame(animateFrame);
+        } else {
+            // Animation is paused or completed
+            isAnimating = false;
+        }
+    }
+
+    // Start the animation
+    isAnimating = true;
+    animateFrame();
+    /*
     // draw the circles
     for (let i = 0; i < matchData.length; i++) {
         // add 1 second to the timer
@@ -127,6 +206,7 @@ async function DoAmination() {
         // Wait for all players to finish showing their positions before moving to the next frame
         await Promise.all(playerPromises);
     }
+    */
 }
 
 SetSVG();

@@ -56,3 +56,11 @@ body {
 .slider-container input {
     width: 35vw;
 }
+
+#pauseButton {
+    border: solid black 1px;
+    border-radius: 24px;
+    padding: 12px 16px;
+    text-decoration: none;
+    cursor: pointer;
+}
