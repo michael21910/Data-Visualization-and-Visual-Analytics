@@ -9,16 +9,19 @@ const mapLink = "./LOLMinimap.jpg"
 const dataDictionary = {};
 var minute = 0;
 var second = 0;
-var totalFrame = 0; // totalFrame = minute * 60 + second
-var animationSpeed = 1;
+var animationSpeed = 0;
 var isPaused = false;
-var isAnimating = false;
+var role = ['S', 'T', 'J', 'M', 'A'];
+var isCalled = false;
+var waiting = [];
+var step = 20;
 
 const speedSlider = document.getElementById('speedSlider');
 const timeSlider = document.getElementById('timeSlider');
-const pauseButton = document.getElementById('pauseButton');
+const pauseBtn = document.getElementById('pauseBtn');
+const forwardBtn = document.getElementById('forwardBtn');
+const backwardBtn = document.getElementById('backwardBtn');
 
-// speed slider event listener
 speedSlider.addEventListener('input', function() {
     // Update the animation speed when the slider is moved
     animationSpeed = speedSlider.value;
@@ -26,19 +29,34 @@ speedSlider.addEventListener('input', function() {
     document.getElementById('sliderText').innerHTML = `Speed: x${formattedSpeed}`;
 });
 
-// pause button event listener
-pauseButton.addEventListener('click', function() {
+timeSlider.addEventListener('input', function() {
+    setNewTime('0');
+    UpdateTimerDisplay();
+    waiting.push(timeSlider.value);
+});
+
+// pause btn
+pauseBtn.addEventListener('click', function() {
     isPaused = !isPaused;
     if (isPaused) {
-        pauseButton.textContent = 'Resume';
+        pauseBtn.innerHTML = 'Resume';
     }
     else {
-        pauseButton.textContent = 'Pause';
-        if (!isAnimating) {
-            animateFrame();
-        }
+        pauseBtn.innerHTML = 'Pause';
     }
 });
+
+forwardBtn.addEventListener('click', function(){
+    setNewTime(parseInt(step));
+    UpdateTimerDisplay();
+    waiting.push(timeSlider.value);
+})
+
+backwardBtn.addEventListener('click', function(){
+    setNewTime(parseInt(step) * -1);
+    UpdateTimerDisplay();
+    waiting.push(timeSlider.value);
+})
 
 // timer add 1 second
 function TimerAddOneSecond() {
@@ -47,25 +65,29 @@ function TimerAddOneSecond() {
         second = 0;
         minute++;
     }
-    UpdateDisplay();
+    UpdateTimerDisplay();
 }
 
 // timer reset
 function TimerReset() {
     minute = 0;
     second = 0;
-    UpdateDisplay();
+    UpdateTimerDisplay();
+}
+
+// get value from time slider
+function setNewTime(delta){
+    const curFrame = parseInt(timeSlider.value) + parseInt(delta);
+    minute = Math.floor(curFrame / 60);
+    second = curFrame % 60;
 }
 
 // refresh timer display
-function UpdateDisplay() {
-    // speed display
+function UpdateTimerDisplay() {
     const formattedMinute = minute.toString().padStart(2, '0');
     const formattedSecond = second.toString().padStart(2, '0');
     document.getElementById('message').innerHTML = `time: ${formattedMinute}:${formattedSecond}`;
-    // timer display
-    totalFrame = minute * 60 + second;
-    timeSlider.value = totalFrame;
+    timeSlider.value = minute * 60 + second;
 }
 
 // set image and svg attr
@@ -91,15 +113,22 @@ function SetSelectionTag() {
     }
     // Add event listener for the change event on the select element
     select.addEventListener('change', function() {
-        DoAmination();
+        waiting.push(0);
+        if (waiting.length === 1 && isCalled === false) {
+            run();
+        }
     });
 }
 
 // the main animation function
-async function DoAmination() {
-    // reset the timer
-    TimerReset();
-    
+async function DoAmination(startTime) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    isCalled = true;
+    console.log("call animation");
+
+    if (startTime === 0) {
+        TimerReset();
+    }
     // reset the speed slider
     document.getElementById('speedSlider').value = 1;
     animationSpeed = 1;
@@ -108,74 +137,59 @@ async function DoAmination() {
     // get the data of the match
     const matchData = dataDictionary[document.getElementById('matchSelect').value];
 
-    // set the max value for time slider
-    timeSlider.max = matchData.length - 1;
+    // set the max value of time slider
+    timeSlider.max = matchData.length;
 
     // get the svg
     const svg = d3.select('#animation');
     
     // remove all the circles when user clicked a new match
     svg.selectAll('circle').remove();
+    svg.selectAll('text').remove();
 
     // set the scale of the svg
     const xScale = d3.scaleLinear().domain([0, 15000]).range([0, width]);
     const yScale = d3.scaleLinear().domain([0, 15000]).range([height, 0]);
 
-    let currentIndex = 0;
-
-    async function animateFrame() {
-        if (!isPaused && currentIndex < matchData.length) {
-            // add 1 second to the timer
-            TimerAddOneSecond();
-
-            const playerRowData = matchData[currentIndex];
-            const isTeamfight = playerRowData[20] === 1;
-
-            // Create a Promise for each player to show their position
-            const playerPromises = [];
-
+    // draw the circlesTimerReset();
+    for (let i = startTime; i < matchData.length; i++) {
+        // add 1 second to the timer
+        TimerAddOneSecond();
+        if (waiting.length !== 0) {
+            console.log("ruin start, waiting.length: ", waiting.length);
+            svg.selectAll('circle').remove();
+            svg.selectAll('text').remove();
+            break;
+        }
+        if (isPaused && i !== 0) {
+            console.log('pause step: ', i);
+            const lastData = matchData[i - 1];
+            const lastFight = lastData[20] === 1;
             for (let j = 0; j < 10; j++) {
-                const playerX = playerRowData[j * 2];
-                const playerY = playerRowData[j * 2 + 1];
+                const playerX = lastData[j * 2];
+                const playerY = lastData[j * 2 + 1];
                 const isBlueTeam = j < 5;
-
+    
                 const circle = svg.append('circle')
                     .attr('cx', xScale(playerX))
                     .attr('cy', yScale(playerY))
-                    .attr('r', 5)
-                    .attr('fill', isBlueTeam ? 'blue' : 'red');
-
-                playerPromises.push(new Promise(resolve => {
-                    // after a fixed time, resolve the Promise
-                    setTimeout(() => {
-                        circle.remove();
-                        resolve();
-                    }, 20 / animationSpeed);
-                }));
+                    .attr('r', 10)
+                    .attr('fill', isBlueTeam ? '#1E90FF' : '#ff9999');
+                const label = svg.append('text')
+                .attr('x', xScale(playerX))
+                .attr('y', yScale(playerY))
+                .attr('dy', 4) // adjust vertical position of the label
+                .attr('text-anchor', 'middle')
+                .text(role[(j + 1) % 5]); // Display player number
             }
-
-            // Wait for all players to finish showing their positions before moving to the next frame
-            await Promise.all(playerPromises);
-
-            // Move to the next frame
-            currentIndex++;
-
-            // Call the next frame asynchronously
-            requestAnimationFrame(animateFrame);
-        } else {
-            // Animation is paused or completed
-            isAnimating = false;
         }
-    }
-
-    // Start the animation
-    isAnimating = true;
-    animateFrame();
-    /*
-    // draw the circles
-    for (let i = 0; i < matchData.length; i++) {
-        // add 1 second to the timer
-        TimerAddOneSecond();
+        while (isPaused) {
+            await new Promise(resolve => setTimeout(resolve, 100)); // wait for 100 milliseconds
+        }
+        if (isPaused === false) {
+            svg.selectAll('circle').remove();
+            svg.selectAll('text').remove();
+        }
 
         const playerRowData = matchData[i];
         const isTeamfight = playerRowData[20] === 1;
@@ -191,22 +205,29 @@ async function DoAmination() {
             const circle = svg.append('circle')
                 .attr('cx', xScale(playerX))
                 .attr('cy', yScale(playerY))
-                .attr('r', 5)
-                .attr('fill', isBlueTeam ? 'blue' : 'red');
+                .attr('r', 10)
+                .attr('fill', isBlueTeam ? '#1E90FF' : '#ff9999');
+            
+            const label = svg.append('text')
+                .attr('x', xScale(playerX))
+                .attr('y', yScale(playerY))
+                .attr('dy', 4) // adjust vertical position of the label
+                .attr('text-anchor', 'middle')
+                .text(role[(j + 1) % 5]); // Display player number
 
             playerPromises.push(new Promise(resolve => {
                 // after a fixed time, resolve the Promise
                 setTimeout(() => {
                     circle.remove();
+                    label.remove();
                     resolve();
-                }, 20 / animationSpeed);
+                }, 30 / animationSpeed);
             }));
         }
-
         // Wait for all players to finish showing their positions before moving to the next frame
         await Promise.all(playerPromises);
     }
-    */
+    run();
 }
 
 SetSVG();
@@ -230,5 +251,19 @@ d3.csv('./rawData.csv').then(function (rawData) {
     });
     document.getElementById('message').innerHTML = "data loaded.";
     SetSelectionTag();
-    DoAmination();
+    waiting.push(0);
+    run();
 });
+
+function run() {
+    if (waiting.length !== 0) {
+        console.log(waiting.length);
+        while (waiting.length > 1) {
+            waiting.shift();
+        }
+        DoAmination(waiting.shift());
+    }
+    else {
+        isCalled = false;
+    }  
+}
